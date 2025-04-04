@@ -22,7 +22,7 @@ func main() {
 
 	//TODO: List all To do
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Status(200).JSON(fiber.Map{"msg": "hello world"})
+		return c.Status(200).JSON(todos)
 	})
 
 	//Create a To do
