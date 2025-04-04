@@ -5,10 +5,9 @@ tmp_dir = "tmp"
 args_bin = []
 bin = "tmp\\main.exe"
 cmd = "go build -o ./tmp/main.exe ."
-delay = 1000
-exclude = ["tmp/*", "client/*"]
-include = ["**/*.go"]
-ignore = ["tmp/*"]
+delay = 10000
+exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+include_ext = ["go", "tpl", "tmpl", "html"]
 
 [color]
 app = ""
