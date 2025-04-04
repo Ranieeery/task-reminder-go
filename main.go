@@ -1,28 +1,34 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"log"
+	"time"
 )
 
 type Todo struct {
 	ID          uuid.UUID `json:"id"`
-	isCompleted bool      `json:"completed"`
+	IsCompleted bool      `json:"completed"`
 	Body        string    `json:"body"`
+	DateCreated time.Time `json:"date_created"`
 }
 
 func main() {
 	app := fiber.New()
 
-	todos := []Todo{}
+	var todos []Todo
 
+	//TODO: List all To do
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{"msg": "hello world"})
 	})
 
-	app.Post("/", func(c *fiber.Ctx) error {
-		todo := &Todo{}
+	//Create a To do
+	app.Post("/api/todos", func(c *fiber.Ctx) error {
+
+		var todo = &Todo{}
 
 		if err := c.BodyParser(todo); err != nil {
 			return err
@@ -33,10 +39,29 @@ func main() {
 		}
 
 		todo.ID = uuid.New()
+		todo.DateCreated = time.Now()
 		todos = append(todos, *todo)
 
-		return c.Status(201).JSON(fiber.Map{"msg": "ok"})
+		return c.Status(201).JSON(todo)
 	})
+
+	//Update a To do status
+	app.Patch("/api/todos/:id", func(c *fiber.Ctx) error {
+		id := c.Params("id")
+
+		for i, todo := range todos {
+			if fmt.Sprint(todo.ID) == id {
+				todos[i].IsCompleted = true
+				return c.Status(200).JSON(todos[i])
+			}
+		}
+
+		return c.Status(404).JSON(fiber.Map{"msg": "Todo id not found"})
+	})
+
+	//TODO: Update body/description
+
+	//Delete a To do
 
 	log.Fatal(app.Listen(":4000"))
 }
