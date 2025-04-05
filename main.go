@@ -107,7 +107,7 @@ func createTodo(c *fiber.Ctx) error {
 	if todo.Body == "" {
 		return c.Status(400).JSON(fiber.Map{"msg": "body is empty"})
 	}
-	
+
 	todo.ID = uuid.New()
 	todo.DateCreated = time.Now()
 
@@ -120,9 +120,37 @@ func createTodo(c *fiber.Ctx) error {
 }
 
 func updateTodo(c *fiber.Ctx) error {
-	return nil
+	id := c.Params("id")
+	objectID, err := uuid.Parse(id)
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"msg": "Todo id not found"})
+	}
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{"$set": bson.M{"IsCompleted": true}}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{"msg": "success"})
 }
 
 func deleteTodo(c *fiber.Ctx) error {
-	return nil
+	id := c.Params("id")
+	objectID, err := uuid.Parse(id)
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"msg": "Todo id not found"})
+	}
+	filter := bson.M{"_id": objectID}
+
+	_, err = collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{"msg": "success"})
 }
