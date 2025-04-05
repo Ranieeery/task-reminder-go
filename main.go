@@ -16,7 +16,7 @@ import (
 )
 
 type Todo struct {
-	ID          uuid.UUID `json:"_id" bson:"_id"`
+	ID          uuid.UUID `json:"_id,omitempty" bson:"_id,omitempty"`
 	IsCompleted bool      `json:"completed"`
 	Body        string    `json:"body"`
 	DateCreated time.Time `json:"date_created"`
@@ -98,7 +98,25 @@ func getTodo(c *fiber.Ctx) error {
 }
 
 func createTodo(c *fiber.Ctx) error {
-	return nil
+	todo := new(Todo)
+
+	if err := c.BodyParser(todo); err != nil {
+		return err
+	}
+
+	if todo.Body == "" {
+		return c.Status(400).JSON(fiber.Map{"msg": "body is empty"})
+	}
+	
+	todo.ID = uuid.New()
+	todo.DateCreated = time.Now()
+
+	_, err := collection.InsertOne(context.Background(), todo)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(201).JSON(todo)
 }
 
 func updateTodo(c *fiber.Ctx) error {
