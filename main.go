@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"log"
 	"os"
 	"time"
@@ -39,8 +40,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = client.Ping(context.Background(), nil)
-	if err != nil {
+	defer func() {
+		if err := client.Disconnect(context.Background()); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	if err = client.Ping(context.Background(), nil); err != nil {
 		log.Fatal(err)
 	}
 
@@ -62,18 +68,43 @@ func main() {
 	log.Fatal(app.Listen(":" + PORT))
 }
 
-func getTodo(ctx *fiber.Ctx) error {
+func getTodo(c *fiber.Ctx) error {
+	var todos []Todo
+
+	cursor, err := collection.Find(context.Background(), bson.M{})
+
+	if err != nil {
+		return err
+	}
+
+	defer func(cursor *mongo.Cursor, c context.Context) {
+		err := cursor.Close(c)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(cursor, context.Background())
+
+	for cursor.Next(context.Background()) {
+		var todo Todo
+
+		if err := cursor.Decode(&todo); err != nil {
+			return err
+		}
+
+		todos = append(todos, todo)
+	}
+
+	return c.JSON(todos)
+}
+
+func createTodo(c *fiber.Ctx) error {
 	return nil
 }
 
-func createTodo(ctx *fiber.Ctx) error {
+func updateTodo(c *fiber.Ctx) error {
 	return nil
 }
 
-func updateTodo(ctx *fiber.Ctx) error {
-	return nil
-}
-
-func deleteTodo(ctx *fiber.Ctx) error {
+func deleteTodo(c *fiber.Ctx) error {
 	return nil
 }
