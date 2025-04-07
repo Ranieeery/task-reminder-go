@@ -18,7 +18,7 @@ type Todo_old struct {
 	DateCreated time.Time `json:"date_created"`
 }
 
-func main() {
+func main_old() {
 	app := fiber.New()
 
 	err := godotenv.Load(".env")
