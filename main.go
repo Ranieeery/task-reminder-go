@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"log"
 	"os"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -59,6 +59,7 @@ func main() {
 	app.Get("/api/todos", getTodo)
 	app.Post("/api/todos", createTodo)
 	app.Patch("/api/todos/:id", updateTodo)
+	app.Put("/api/todos/:id", updateBody)
 	app.Delete("/api/todos/:id", deleteTodo)
 
 	if PORT == "" {
@@ -129,6 +130,35 @@ func updateTodo(c *fiber.Ctx) error {
 
 	filter := bson.M{"_id": objectID}
 	update := bson.M{"$set": bson.M{"IsCompleted": true}}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{"msg": "success"})
+}
+
+func updateBody(c *fiber.Ctx) error {
+	id := c.Params("id")
+	objectID, err := uuid.Parse(id)
+
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"msg": "Todo id not found"})
+	}
+
+	todo := new(Todo)
+
+	if err := c.BodyParser(todo); err != nil {
+		return err
+	}
+
+	if todo.Body == "" {
+		return c.Status(400).JSON(fiber.Map{"msg": "body is empty"})
+	}
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{"$set": bson.M{"body": todo.Body}}
 
 	_, err = collection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
