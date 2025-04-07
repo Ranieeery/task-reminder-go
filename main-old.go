@@ -69,6 +69,7 @@ func main_old() {
 		return c.Status(404).JSON(fiber.Map{"msg": "Todo id not found"})
 	})
 
+	//Update a To do body
 	app.Put("/api_old/todos/:id", func(c *fiber.Ctx) error {
 		var todo = &Todo_old{}
 		id := c.Params("id")
